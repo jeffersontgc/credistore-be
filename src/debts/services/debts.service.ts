@@ -209,8 +209,9 @@ export class DebtsService {
     // Get total count
     const total = await queryBuilder.getCount();
 
-    // Get total amount for all debts (without pagination)
+    // Get total amount for all debts (without pagination) using a cloned query
     const amountResult = await queryBuilder
+      .clone()
       .select('SUM(debt.amount)', 'total')
       .getRawOne();
     const totalAmount = parseFloat(amountResult?.total || '0');

@@ -71,6 +71,20 @@ input FilterProductInput {
   type: ProductType
 }
 
+input FindDailySalesInput {
+  endDate: DateTime
+  limit: Int! = 30
+  page: Int! = 1
+  startDate: DateTime
+}
+
+input FindMonthlySalesInput {
+  limit: Int! = 12
+  month: Int
+  page: Int! = 1
+  year: Int
+}
+
 input LoginUserInput {
   email: String!
   password: String!
@@ -87,6 +101,16 @@ type Mutation {
   updateProduct(args: UpdateProductInput!): Products!
 }
 
+type PaginatedDailySales {
+  data: [ReportSalesDaily!]!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
 type PaginatedDebts {
   data: [Debts!]!
   hasNextPage: Boolean!
@@ -95,6 +119,16 @@ type PaginatedDebts {
   page: Int!
   total: Int!
   totalAmount: Float!
+  totalPages: Int!
+}
+
+type PaginatedMonthlySales {
+  data: [ReportSalesMonthly!]!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  limit: Int!
+  page: Int!
+  total: Int!
   totalPages: Int!
 }
 
@@ -127,14 +161,56 @@ type Products {
 }
 
 type Query {
+  dailySalesReportByDate(date: DateTime!): ReportSalesDaily
+  dailySalesReports(filters: FindDailySalesInput): PaginatedDailySales!
   debt(id: Int!): Debts!
   debts: PaginatedDebts!
   debtsByUser(user_uuid: String!): [Debts!]!
   getProduct(product_uuid: String!): Products!
   getUser(uuid: String!): User!
   lowStockProducts(threshold: Int): [Products!]!
-  products(filters: FilterProductInput): PaginatedProducts!
+  me: User!
+  monthlySalesReportByYearMonth(month: Int!, year: Int!): ReportSalesMonthly
+  monthlySalesReports(filters: FindMonthlySalesInput): PaginatedMonthlySales!
+  products(args: FilterProductInput): PaginatedProducts!
   users: [User!]!
+}
+
+type ReportSalesDaily {
+  active_debts_count: Int!
+  average_sale_amount: Float!
+  createdAt: DateTime!
+  id: Int!
+  paid_debts_count: Int!
+  pending_debts_count: Int!
+  sale_date: DateTime!
+  settled_debts_count: Int!
+  total_active_amount: Float!
+  total_paid_amount: Float!
+  total_products_sold: Int!
+  total_sales: Float!
+  total_transactions: Int!
+  updatedAt: DateTime!
+}
+
+type ReportSalesMonthly {
+  active_debts_count: Int!
+  average_daily_sales: Float!
+  average_sale_amount: Float!
+  createdAt: DateTime!
+  id: Int!
+  month: Int!
+  paid_debts_count: Int!
+  pending_debts_count: Int!
+  settled_debts_count: Int!
+  total_active_amount: Float!
+  total_days: Int!
+  total_paid_amount: Float!
+  total_products_sold: Int!
+  total_sales: Float!
+  total_transactions: Int!
+  updatedAt: DateTime!
+  year: Int!
 }
 
 type SignInResponse {
@@ -163,6 +239,9 @@ type User {
   email: String!
   firstname: String!
   id: Int!
+
+  """ceo user"""
+  isCeo: Boolean!
 
   """Indicates if the user is delinquent (moroso)"""
   isDelinquent: Boolean!

@@ -27,25 +27,26 @@ export class Products {
   @Field(() => Int)
   id: number;
 
-  @Column({ type: 'uuid', unique: true })
+  @Column({ type: 'uuid', unique: true, name: 'uuid' })
   @Field(() => String)
   uuid: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100, name: 'name' })
   @Field(() => String)
   name: string;
 
-  @Column({ type: 'numeric' })
+  @Column({ type: 'numeric', name: 'price' })
   @Field(() => Number)
   price: number;
 
-  @Column()
+  @Column({ name: 'stock' })
   @Field(() => Int)
   stock: number;
 
   @Column({
     type: 'enum',
     enum: ProductType,
+    name: 'type',
   })
   @Field(() => ProductType)
   type: ProductType;

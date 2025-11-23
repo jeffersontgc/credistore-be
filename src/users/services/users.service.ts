@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -14,24 +18,26 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async create(createUserInput: CreateUserInput): Promise<SuccessReponse> {
+  async create(args: CreateUserInput): Promise<SuccessReponse> {
     // valdate if user exists
-    const existeUser = await this.validaExisteUser(createUserInput.email);
+    const existeUser = await this.validaExisteUser(args.email);
 
     if (existeUser) {
-      throw new NotFoundException(
-        `User with email ${createUserInput.email} already exists`,
+      throw new ConflictException(
+        `User with email ${args.email} already exists`,
       );
     }
 
     // hash password
-    const hashedPassword = await bcrypt.hash(createUserInput.password, 10);
+    const hashedPassword = await bcrypt.hash(args.password, 10);
 
-    this.usersRepository.create({
-      ...createUserInput,
+    const user = this.usersRepository.create({
+      ...args,
       uuid: uuidv4(),
       password: hashedPassword,
     });
+
+    await this.usersRepository.save(user);
 
     return {
       status: 'ok',
@@ -53,7 +59,7 @@ export class UsersService {
     return user;
   }
 
-  async validaExisteUser(email: string): Promise<Boolean> {
+  async validaExisteUser(email: string): Promise<boolean> {
     const user = await this.usersRepository.findOne({
       where: { email },
     });
@@ -66,14 +72,17 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find({
-      relations: ['deudas'],
+      relations: ['debts'],
+      where: {
+        isCeo: false,
+      },
     });
   }
 
   async asyncFindByUuid(uuid: string): Promise<User | null> {
     const user = await this.usersRepository.findOneOrFail({
       where: { uuid },
-      relations: ['deudas'],
+      relations: ['debts'],
     });
 
     return user;

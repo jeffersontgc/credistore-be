@@ -11,7 +11,7 @@ import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
 @Entity('reports_sales_daily')
 @ObjectType()
-@Index(['sale_date'], { unique: true })
+@Index(['saleDate'], { unique: true })
 export class ReportSalesDaily {
   @PrimaryGeneratedColumn()
   @Field(() => Int)

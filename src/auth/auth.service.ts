@@ -60,4 +60,8 @@ export class AuthService {
       session_uuid,
     };
   }
+
+  async me(uuid: string): Promise<User | null> {
+    return this.usersService.asyncFindByUuid(uuid);
+  }
 }

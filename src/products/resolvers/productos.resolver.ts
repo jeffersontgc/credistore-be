@@ -23,9 +23,9 @@ export class ProductsResolver {
 
   @Query(() => PaginatedProducts, { name: 'products' })
   async findAll(
-    @Args('filters', { nullable: true }) filters?: FilterProductInput,
+    @Args('args', { nullable: true }) args?: FilterProductInput,
   ): Promise<PaginatedProducts> {
-    return this.productsService.findAll(filters);
+    return this.productsService.findAll(args);
   }
 
   @Query(() => Products, { name: 'getProduct' })

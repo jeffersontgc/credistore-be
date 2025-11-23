@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
+import { Repository, LessThan, DataSource } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateProductInput } from '../dto/create-producto.input';
 import { UpdateProductInput } from '../dto/update-producto.input';
@@ -22,6 +22,7 @@ export class ProductsService {
   constructor(
     @InjectRepository(Products)
     private readonly productsRepository: Repository<Products>,
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -70,50 +71,68 @@ export class ProductsService {
    * @returns Paginated products
    */
   async findAll(args: FilterProductInput = {}): Promise<PaginatedProducts> {
-    const { search, type, page = 1, limit = 10, lowStock } = args;
-
-    this.logger.log(`Finding products with filters: ${JSON.stringify(args)}`);
-
-    const queryBuilder = this.productsRepository.createQueryBuilder('product');
-
-    // Apply search filter
-    if (search) {
-      queryBuilder.where('LOWER(product.name) LIKE LOWER(:search)', {
-        search: `%${search}%`,
-      });
-    }
-
-    // Apply type filter
-    if (type) {
-      queryBuilder.andWhere('product.type = :type', { type });
-    }
-
-    // Apply low stock filter
-    if (lowStock) {
-      queryBuilder.andWhere('product.stock < :threshold', {
-        threshold: this.LOW_STOCK_THRESHOLD,
-      });
-    }
-
-    // Get total count before pagination
-    const total = await queryBuilder.getCount();
-
-    // Apply pagination
+    const { search, type, lowStock, page = 1, limit = 10 } = args;
     const skip = (page - 1) * limit;
-    queryBuilder.skip(skip).take(limit).orderBy('product.createdAt', 'DESC');
 
-    const data = await queryBuilder.getMany();
+    const query = await this.dataSource.query(
+      `
+      SELECT
+        p.uuid,
+        p.name,
+        p.price,
+        p.stock,
+        p.type,
+        p.created_at AS "createdAt",
+        p.updated_at AS "updatedAt"
+      FROM products p
+      WHERE
+        ($1::text IS NULL OR LOWER(p.name) LIKE LOWER('%' || $1 || '%'))
+        AND ($2::text IS NULL OR p.type = $2::products_type_enum)
+        AND ($3::boolean IS NULL OR ($3 = TRUE AND p.stock < $4))
+      ORDER BY p.created_at DESC
+      LIMIT $5 OFFSET $6;
+`,
+      [
+        search ?? null,
+        type ?? null,
+        lowStock ?? null,
+        this.LOW_STOCK_THRESHOLD,
+        limit,
+        skip,
+      ],
+    );
 
-    const totalPages = Math.ceil(total / limit);
+    const totalResults = await this.dataSource.query(
+      `
+      SELECT COUNT(*)
+      FROM products p
+      WHERE
+        ($1::text IS NULL OR LOWER(p.name) LIKE LOWER('%' || $1 || '%'))
+        AND ($2::text IS NULL OR p.type = $2::products_type_enum)
+        AND ($3::boolean IS NULL OR ($3 = TRUE AND p.stock < $4))
+    `,
+      [
+        search ?? null,
+        type ?? null,
+        lowStock ?? null,
+        this.LOW_STOCK_THRESHOLD,
+      ],
+    );
+
+    const totalRecords = Number(totalResults?.[0]?.count ?? 0);
+    const totalPages = Math.ceil(totalRecords / limit);
+    const nextPage =
+      page + 1 > totalPages || totalPages === 0 ? null : page + 1;
+    const prevPage = page - 1 < 1 ? null : page - 1;
 
     return {
-      data,
-      total,
+      data: query,
+      total: totalRecords,
       page,
       limit,
       totalPages,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
+      hasNextPage: nextPage !== null,
+      hasPreviousPage: prevPage !== null,
     };
   }
 

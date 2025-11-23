@@ -1,9 +1,12 @@
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
-import { Response } from 'express';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginUserInput } from './dto/login-user.input';
 import { SignInResponse } from './types/signin-response.type';
 import { Public } from 'src/common/decorators/public.decorator';
+import { UseGuards, UnauthorizedException } from '@nestjs/common';
+import { GqlAuthGuard } from 'src/common/guards/gql-auth.guard';
+import { User } from 'src/users/entities/users.entity';
 
 @Resolver()
 export class AuthResolver {
@@ -40,5 +43,15 @@ export class AuthResolver {
     });
 
     return result;
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => User, { name: 'me' })
+  async me(@Context() context: { req: Request & { user?: User } }) {
+    const user = context.req.user;
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    return this.authService.me(user.uuid);
   }
 }

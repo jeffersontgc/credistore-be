@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
+import * as bodyParser from 'body-parser';
 import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
 
@@ -11,6 +12,12 @@ async function bootstrap() {
 
   // Enable cookie parser
   app.use(cookieParser());
+
+  // Ensure body parsing before hitting GraphQL middleware (global and /graphql)
+  app.use(bodyParser.json({ limit: '2mb' }));
+  app.use(bodyParser.urlencoded({ extended: true, limit: '2mb' }));
+  app.use('/graphql', bodyParser.json({ limit: '2mb' }));
+  app.use('/graphql', bodyParser.urlencoded({ extended: true, limit: '2mb' }));
 
   // Enable validation globally
   app.useGlobalPipes(

@@ -29,7 +29,7 @@ export class Debts {
   @Field(() => Int)
   id: number;
 
-  @Column({ type: 'uuid', unique: true })
+  @Column({ type: 'uuid', unique: true, name: 'uuid' })
   @Field(() => String)
   uuid: string;
 
@@ -37,7 +37,7 @@ export class Debts {
   @Field(() => User)
   user: User;
 
-  @Column({ type: 'timestamptz' })
+  @Column({ type: 'timestamptz', name: 'date_pay' })
   @Field(() => Date)
   date_pay: Date;
 
@@ -45,11 +45,12 @@ export class Debts {
     type: 'enum',
     enum: DebtsStatus,
     default: DebtsStatus.ACTIVE,
+    name: 'status',
   })
   @Field(() => DebtsStatus)
   status: DebtsStatus;
 
-  @Column({ type: 'numeric' })
+  @Column({ type: 'numeric', name: 'amount' })
   @Field(() => Number)
   amount: number;
 
