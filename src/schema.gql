@@ -1,0 +1,173 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input CreateDebtInput {
+  dueDate: DateTime!
+  products: [DebtProductInput!]!
+  user_uuid: String!
+}
+
+input CreateProductInput {
+  name: String!
+  price: Float!
+  stock: Int!
+  type: ProductType!
+}
+
+input CreateUserInput {
+  email: String!
+  firstname: String!
+  lastname: String!
+  password: String!
+  profilePicture: String
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type DebtItem {
+  createdAt: DateTime!
+  debt: Debts!
+  id: Int!
+  price: Float!
+  product: Products!
+  quantity: Int!
+  updatedAt: DateTime!
+  uuid: String!
+}
+
+input DebtProductInput {
+  product_uuid: String!
+  quantity: Int!
+}
+
+type Debts {
+  amount: Float!
+  createdAt: DateTime!
+  date_pay: DateTime!
+  id: Int!
+  products: [DebtItem!]!
+  status: DebtsStatus!
+  updatedAt: DateTime!
+  user: User!
+  uuid: String!
+}
+
+enum DebtsStatus {
+  ACTIVE
+  PAID
+  PENDING
+  SETTLED
+}
+
+input FilterProductInput {
+  limit: Int = 10
+  lowStock: Boolean
+  page: Int = 1
+  search: String
+  type: ProductType
+}
+
+input LoginUserInput {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  createDebt(createDebtInput: CreateDebtInput!): Debts!
+  createProduct(args: CreateProductInput!): SuccessReponse!
+  createUser(createUserInput: CreateUserInput!): SuccessReponse!
+  increaseStock(quantity: Int!, uuid: String!): Products!
+  removeProduct(uuid: String!): Boolean!
+  signIn(loginUserInput: LoginUserInput!): SignInResponse!
+  updateDebtStatus(status: DebtsStatus!, uuid: String!): Debts!
+  updateProduct(args: UpdateProductInput!): Products!
+}
+
+type PaginatedDebts {
+  data: [Debts!]!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalAmount: Float!
+  totalPages: Int!
+}
+
+type PaginatedProducts {
+  data: [Products!]!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
+}
+
+enum ProductType {
+  BEBIDAS
+  GRANOS_BASICOS
+  LACTEOS
+  SNACKS
+}
+
+type Products {
+  createdAt: DateTime!
+  id: Int!
+  name: String!
+  price: Float!
+  stock: Int!
+  type: ProductType!
+  updatedAt: DateTime!
+  uuid: String!
+}
+
+type Query {
+  debt(id: Int!): Debts!
+  debts: PaginatedDebts!
+  debtsByUser(user_uuid: String!): [Debts!]!
+  getProduct(product_uuid: String!): Products!
+  getUser(uuid: String!): User!
+  lowStockProducts(threshold: Int): [Products!]!
+  products(filters: FilterProductInput): PaginatedProducts!
+  users: [User!]!
+}
+
+type SignInResponse {
+  access_token: String!
+  refresh_token: String!
+  session_uuid: String!
+}
+
+type SuccessReponse {
+  message: String
+  status: String!
+}
+
+input UpdateProductInput {
+  name: String
+  price: Float
+  stock: Int
+  type: ProductType
+  uuid: String!
+}
+
+type User {
+  createdAt: DateTime!
+  debts: [Debts!]
+  deletedAt: DateTime
+  email: String!
+  firstname: String!
+  id: Int!
+
+  """Indicates if the user is delinquent (moroso)"""
+  isDelinquent: Boolean!
+  lastname: String!
+  picture: String
+  updatedAt: DateTime!
+  uuid: String!
+}

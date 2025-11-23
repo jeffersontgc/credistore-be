@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(yarn add @nestjs/event-emitter)",
+      "Bash(mkdir:*)",
+      "Bash(yarn build)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

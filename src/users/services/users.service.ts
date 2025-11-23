@@ -1,0 +1,81 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
+import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+import { CreateUserInput } from '../dto/create-user.input';
+import { User } from 'src/users/entities/users.entity';
+import { SuccessReponse } from 'src/utils/response';
+
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
+
+  async create(createUserInput: CreateUserInput): Promise<SuccessReponse> {
+    // valdate if user exists
+    const existeUser = await this.validaExisteUser(createUserInput.email);
+
+    if (existeUser) {
+      throw new NotFoundException(
+        `User with email ${createUserInput.email} already exists`,
+      );
+    }
+
+    // hash password
+    const hashedPassword = await bcrypt.hash(createUserInput.password, 10);
+
+    this.usersRepository.create({
+      ...createUserInput,
+      uuid: uuidv4(),
+      password: hashedPassword,
+    });
+
+    return {
+      status: 'ok',
+      message: 'User created successfully',
+    };
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.usersRepository.findOne({
+      where: { email },
+    });
+    return user;
+  }
+
+  async findByUuid(uuid: string): Promise<User | null> {
+    const user = await this.usersRepository.findOne({
+      where: { uuid },
+    });
+    return user;
+  }
+
+  async validaExisteUser(email: string): Promise<Boolean> {
+    const user = await this.usersRepository.findOne({
+      where: { email },
+    });
+
+    if (!user) {
+      return false;
+    }
+    return true;
+  }
+
+  async findAll(): Promise<User[]> {
+    return this.usersRepository.find({
+      relations: ['deudas'],
+    });
+  }
+
+  async asyncFindByUuid(uuid: string): Promise<User | null> {
+    const user = await this.usersRepository.findOneOrFail({
+      where: { uuid },
+      relations: ['deudas'],
+    });
+
+    return user;
+  }
+}
