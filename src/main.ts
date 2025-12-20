@@ -29,11 +29,10 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: ['https://creadistore.vercel.app', 'http://localhost:3000'],
+    origin: ['https://anastore-theta.vercel.app', 'http://localhost:3000'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   });
-
   await app.listen(configService.port);
   console.log(
     `Application is running on: http://localhost:${configService.port}`,
