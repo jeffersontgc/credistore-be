@@ -24,6 +24,7 @@ import { ReportsModule } from 'src/reports/reports.module';
       autoSchemaFile: true,
       sortSchema: true,
       playground: true,
+      introspection: true,
       context: ({ req, res }) => ({ req, res }),
     }),
     AuthModule,
