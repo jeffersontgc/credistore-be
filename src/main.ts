@@ -29,8 +29,9 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: true,
+    origin: ['https://creadistore.vercel.app', 'http://localhost:3000'],
     credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   });
 
   await app.listen(configService.port);
