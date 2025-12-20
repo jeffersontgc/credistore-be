@@ -9,34 +9,26 @@ import config from '../config';
     TypeOrmModule.forRootAsync({
       inject: [config.KEY],
       useFactory: (configService: ConfigType<typeof config>) => {
-        const { host, port, database, username, password } =
+        const { url, host, port, database, username, password } =
           configService.postgres;
         return {
           type: 'postgres',
-          host,
-          port,
-          username,
-          password,
-          database,
+          url: url,
+          host: url ? undefined : host,
+          port: url ? undefined : port,
+          username: url ? undefined : username,
+          password: url ? undefined : password,
+          database: url ? undefined : database,
+
           autoLoadEntities: true,
-          synchronize: false,
-          retryAttempts: 10,
-          retryDelay: 3000,
-          maxQueryExecutionTime: 5000, // Log slow queries (>5s)
-          extra: {
-            connectionTimeoutMillis: 5000,
-            idleTimeoutMillis: 30000,
-            max: 20, // Maximum pool size
-            min: 5, // Minimum pool size
-            // Transaction isolation level for PostgreSQL
-            // READ COMMITTED prevents dirty reads and ensures data consistency
-            statement_timeout: 300000, // 5 minutes
-          },
+          synchronize: true, // Cambia a true para que Neon cree las tablas automáticamente
+
+          // OBLIGATORIO PARA NEON
+          ssl: url ? { rejectUnauthorized: false } : false,
         };
       },
     }),
   ],
-  providers: [],
   exports: [TypeOrmModule],
 })
 export class DatabaseModule {}
